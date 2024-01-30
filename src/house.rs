@@ -1,4 +1,4 @@
-use crate::devices::DeviceInfoProvider;
+use crate::devices::{DeviceInfoProvider};
 
 pub struct SmartHouse {
     name: String,
@@ -55,4 +55,41 @@ impl SmartHouse {
         }
         report
     }
+}
+
+#[test]
+fn test_house_creation() {
+    let house = SmartHouse::new("My Smart House");
+    assert_eq!(house.name, "My Smart House");
+}
+
+#[test]
+fn test_get_rooms() {
+    let house = SmartHouse::new("My Smart House");
+    let rooms = house.get_rooms();
+    assert_eq!(rooms, vec!["Living Room", "Kitchen"]);
+}
+
+#[test]
+fn test_devices_in_living_room() {
+    let house = SmartHouse::new("My Smart House");
+    let devices = house.devices("Living Room");
+    assert_eq!(devices, vec!["TV", "Lamp", "Thermo"]);
+}
+
+#[test]
+fn test_devices_in_unknown_room() {
+    let house = SmartHouse::new("My Smart House");
+    let devices = house.devices("Bedroom");
+    assert!(devices.is_empty());
+}
+
+#[test]
+fn test_create_report() {
+    let house = SmartHouse::new("My Smart House");
+    let socket1 = crate::devices::SmartSocket {};
+    let info_provider_1 = crate::devices::OwningDeviceInfoProvider { socket: socket1 };
+    let report = house.create_report(&info_provider_1);
+    assert!(report.contains(" Info: State: On"));
+    assert!(report.contains("Room: Living Room, Device: Lamp, Info: Luminosity: 70%"));
 }

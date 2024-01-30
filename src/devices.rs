@@ -84,3 +84,89 @@ impl<'a, 'b> DeviceInfoProvider for BorrowingDeviceInfoProvider<'a, 'b> {
         )
     }
 }
+
+#[cfg(test)]
+mod smart_socket_tests {
+    use super::*;
+
+    #[test]
+    fn test_smart_socket_tv() {
+        let socket = SmartSocket {};
+        assert_eq!(socket.get_device_status("", "TV"), "Info: State: On");
+    }
+
+    #[test]
+    fn test_smart_socket_lamp() {
+        let socket = SmartSocket {};
+        assert_eq!(socket.get_device_status("", "Lamp"), "Info: Luminosity: 70%");
+    }
+
+    #[test]
+    fn test_smart_socket_fridge() {
+        let socket = SmartSocket {};
+        assert_eq!(socket.get_device_status("", "Fridge"), "Info: 220w");
+    }
+
+    #[test]
+    fn test_smart_socket_unknown() {
+        let socket = SmartSocket {};
+        assert_eq!(socket.get_device_status("", "Super lamp"), "Info: Unknown device");
+    }
+}
+
+#[cfg(test)]
+mod smart_thermometer_tests {
+    use super::*;
+
+    #[test]
+    fn test_smart_thermometer_thermo() {
+        let thermo = SmartThermometer {};
+        assert_eq!(thermo.get_device_status("", "Thermo"), "Info: Temp: 20C");
+    }
+
+    #[test]
+    fn test_smart_thermometer_unknown() {
+        let thermo = SmartThermometer {};
+        assert_eq!(thermo.get_device_status("", "My therm"), "Info: Unknown device");
+    }
+}
+
+#[cfg(test)]
+mod owning_device_info_provider_tests {
+    use super::*;
+
+    #[test]
+    fn test_owning_provider_tv() {
+        let socket = SmartSocket {};
+        let provider = OwningDeviceInfoProvider { socket };
+        assert_eq!(provider.get_device_status("Living Room", "TV"), "Room: Living Room, Device: TV, Info: State: On");
+    }
+
+    #[test]
+    fn test_owning_provider_room_unknown() {
+        let socket = SmartSocket {};
+        let provider = OwningDeviceInfoProvider { socket };
+        assert_eq!(provider.get_device_status("Child room", "TV"), "Room: Child room, Device: TV, Unknown room");
+    }
+}
+
+#[cfg(test)]
+mod borrowing_device_info_provider_tests {
+    use super::*;
+
+    #[test]
+    fn test_borrowing_provider_thermo() {
+        let socket = SmartSocket {};
+        let thermo = SmartThermometer {};
+        let provider = BorrowingDeviceInfoProvider { socket: &socket, thermo: &thermo };
+        assert_eq!(provider.get_device_status("Kitchen", "Thermo"), "Room: Kitchen, Device: Thermo, Info: Temp: 20C");
+    }
+
+    #[test]
+    fn test_borrowing_provider_unknown() {
+        let socket = SmartSocket {};
+        let thermo = SmartThermometer {};
+        let provider = BorrowingDeviceInfoProvider { socket: &socket, thermo: &thermo };
+        assert_eq!(provider.get_device_status("Kitchen new", "Thermo"), "Room: Kitchen new, Device: Thermo, Unknown room");
+    }
+}
