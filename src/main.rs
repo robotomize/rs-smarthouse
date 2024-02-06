@@ -15,10 +15,13 @@ fn main() {
 
     println!("House specification:");
     for room in h.get_rooms() {
-        for device in h.devices(room) {
-            println!("Room: {}, Devices: {:?}", room, device);
+        if let Some(devices) = h.devices(&room) {
+            for device in devices {
+                println!("Room: {}, Devices: {:?}", room, device);
+            }
         }
     }
+
     println!();
 
     let info_provider_1 = OwningDeviceInfoProvider { socket: socket1 };

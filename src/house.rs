@@ -1,4 +1,6 @@
-use crate::devices::{DeviceInfoProvider};
+use crate::devices::{DeviceInfoProvider, DeviceTypes, RoomTypes};
+use crate::devices::DeviceTypes::{Fridge, Lamp, Thermo, TV};
+use crate::devices::RoomTypes::{Kitchen, Living};
 
 pub struct SmartHouse {
     name: String,
@@ -6,8 +8,8 @@ pub struct SmartHouse {
 }
 
 pub struct Room {
-    name: String,
-    devices: Vec<String>,
+    name: RoomTypes,
+    devices: Vec<DeviceTypes>,
 }
 
 impl SmartHouse {
@@ -16,41 +18,41 @@ impl SmartHouse {
             name: name.to_string(),
             rooms: vec![
                 Room {
-                    name: "Living Room".to_string(),
-                    devices: vec!["TV".to_string(), "Lamp".to_string(), "Thermo".to_string()],
+                    name: Living,
+                    devices: vec![TV, Lamp, Thermo],
                 },
                 Room {
-                    name: "Kitchen".to_string(),
+                    name: Kitchen,
                     devices: vec![
-                        "Lamp".to_string(),
-                        "Thermo".to_string(),
-                        "Fridge".to_string(),
+                        Lamp,
+                        Thermo,
+                        Fridge,
                     ],
                 },
             ],
         }
     }
 
-    pub fn get_rooms(&self) -> Vec<&str> {
-        self.rooms.iter().map(|r| r.name.as_str()).collect()
+    pub fn get_rooms(&self) -> Vec<RoomTypes> {
+        self.rooms.iter().map(|r| r.name).collect()
     }
 
-    pub fn devices(&self, room_name: &str) -> Vec<&str> {
+    pub fn devices(&self, room_name: &RoomTypes) -> Option<Vec<DeviceTypes>> {
         self.rooms
             .iter()
-            .find(|r| r.name == room_name)
-            .map_or(Vec::new(), |r| {
-                r.devices.iter().map(AsRef::as_ref).collect()
-            })
+            .find(|r| r.name == *room_name)
+            .map(|r| r.devices.clone())
     }
 
     pub fn create_report<T: DeviceInfoProvider>(&self, provider: &T) -> String {
         let mut report = String::new();
-        report.push_str(self.name.as_str());
+        report.push_str(format!("House: {}\n", self.name).as_str());
         for room in &self.rooms {
             for device in &room.devices {
-                let info = provider.get_device_status(&room.name, device);
-                report.push_str(&format!("{}\n", info));
+                if let Some(status) = provider.get_device_status(&room.name, device) {
+                    report.push_str(&format!("Room: {}, Device: {}, {}\n", room.name, device,
+                                             status));
+                }
             }
         }
         report
@@ -67,21 +69,14 @@ fn test_house_creation() {
 fn test_get_rooms() {
     let house = SmartHouse::new("My Smart House");
     let rooms = house.get_rooms();
-    assert_eq!(rooms, vec!["Living Room", "Kitchen"]);
+    assert_eq!(rooms, vec![Living, Kitchen]);
 }
 
 #[test]
 fn test_devices_in_living_room() {
     let house = SmartHouse::new("My Smart House");
-    let devices = house.devices("Living Room");
-    assert_eq!(devices, vec!["TV", "Lamp", "Thermo"]);
-}
-
-#[test]
-fn test_devices_in_unknown_room() {
-    let house = SmartHouse::new("My Smart House");
-    let devices = house.devices("Bedroom");
-    assert!(devices.is_empty());
+    let devices = house.devices(&Living);
+    assert_eq!(devices, Some(vec![TV, Lamp, Thermo]));
 }
 
 #[test]
@@ -90,6 +85,6 @@ fn test_create_report() {
     let socket1 = crate::devices::SmartSocket {};
     let info_provider_1 = crate::devices::OwningDeviceInfoProvider { socket: socket1 };
     let report = house.create_report(&info_provider_1);
-    assert!(report.contains(" Info: State: On"));
-    assert!(report.contains("Room: Living Room, Device: Lamp, Info: Luminosity: 70%"));
+    assert!(report.contains("State: On"));
+    assert!(report.contains("Room: Living, Device: Lamp, Luminosity: 70%"));
 }
