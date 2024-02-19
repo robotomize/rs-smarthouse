@@ -1,9 +1,7 @@
 mod devices;
 mod house;
 
-use crate::devices::{
-    BorrowingDeviceInfoProvider, OwningDeviceInfoProvider, SmartSocket, SmartThermometer,
-};
+use crate::devices::{BorrowingDeviceInfoProvider, DeviceTypes, OwningDeviceInfoProvider, SmartSocket, SmartThermometer};
 use crate::house::SmartHouse;
 
 fn main() {
@@ -11,9 +9,22 @@ fn main() {
     let socket2 = SmartSocket {};
     let thermo = SmartThermometer {};
 
-    let h = SmartHouse::new("my house");
+    let mut h = SmartHouse::new("my house");
 
-    println!("House specification:");
+    h.add_device("Kitchen", DeviceTypes::TV);
+    h.remove_device("Kitchen", DeviceTypes::TV);
+    print!("Rooms with bathroom:\n");
+    h.add_room("BathRoom");
+    for room in h.get_rooms() {
+        println!("Room: {}", room)
+    }
+    h.remove_room("BathRoom");
+    println!("\nRooms without bathroom:");
+    for room in h.get_rooms() {
+        println!("Room: {}", room)
+    }
+    h.remove_room("BathRoom");
+    println!("\nHouse specification:");
     for room in h.get_rooms() {
         if let Some(devices) = h.devices(&room) {
             for device in devices {
