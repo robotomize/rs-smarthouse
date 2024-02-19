@@ -33,7 +33,7 @@ impl SmartHouse {
     }
 
     pub fn add_room(&mut self, name: &str) {
-        if self.rooms.iter().find(|r| r.name == name).is_none() {
+        if !self.rooms.iter().any(|r| r.name == name) {
             self.rooms.push(Room {
                 name: name.to_string(),
                 devices: Vec::new(),

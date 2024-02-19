@@ -13,7 +13,7 @@ fn main() {
 
     h.add_device("Kitchen", DeviceTypes::TV);
     h.remove_device("Kitchen", DeviceTypes::TV);
-    print!("Rooms with bathroom:\n");
+    println!("Rooms with bathroom:\n");
     h.add_room("BathRoom");
     for room in h.get_rooms() {
         println!("Room: {}", room)
@@ -26,7 +26,7 @@ fn main() {
     h.remove_room("BathRoom");
     println!("\nHouse specification:");
     for room in h.get_rooms() {
-        if let Some(devices) = h.devices(&room) {
+        if let Some(devices) = h.devices(room) {
             for device in devices {
                 println!("Room: {}, Devices: {:?}", room, device);
             }
